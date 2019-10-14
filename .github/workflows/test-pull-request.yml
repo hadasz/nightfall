@@ -1,7 +1,7 @@
 name: Run Nightfall test suite
 
 on:
-  pull_request:
+  push:
     branches:
     - master
 
@@ -49,3 +49,16 @@ jobs:
         docker rm $(docker ps -a -q)
     - name: Run integration test
       run:  ./nightfall-test
+
+  send-mail:
+    name: Mail integration test logs
+    runs-on: ubuntu-18.04
+
+     steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '10.15.3'
+    -name: List files
+      run:  |
+        ls
