@@ -49,16 +49,7 @@ jobs:
         docker rm $(docker ps -a -q)
     - name: Run integration test
       run:  ./nightfall-test
-
-  send-mail:
-    name: Mail integration test logs
-    runs-on: ubuntu-18.04
-
-    steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
+    - uses: actions/upload-artifact@master
       with:
-        node-version: '10.15.3'
-    - name: List files
-      run:  |
-        ls
+        name: integration-test-logs
+        path: nightfall_test.log
