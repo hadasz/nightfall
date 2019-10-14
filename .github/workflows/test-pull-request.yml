@@ -54,11 +54,11 @@ jobs:
     name: Mail integration test logs
     runs-on: ubuntu-18.04
 
-     steps:
+    steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-node@v1
       with:
         node-version: '10.15.3'
-    -name: List files
+    - name: List files
       run:  |
         ls
