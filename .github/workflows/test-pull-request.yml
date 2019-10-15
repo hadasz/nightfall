@@ -28,7 +28,6 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '10.15.3'
-    - run: npm ci
     - name: Pull docker image
       run:  docker pull zokrates/zokrates:0.4.11
     - name: Increase swap memory
