@@ -28,6 +28,7 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '10.15.3'
+    - run: npm ci
     - name: Pull docker image
       run:  docker pull zokrates/zokrates:0.4.11
     - name: Increase swap memory
@@ -49,6 +50,9 @@ jobs:
         docker rm $(docker ps -a -q)
     - name: Run integration test
       run:  ./nightfall-test
-    - name: If integration test failed, open(cat) nightfall_test.log file
+    - name: If integration test failed, upload logs files as artifacts
       if: failure()
-      run: cat nightfall_test.log
+      uses: actions/upload-artifact@master
+      with:
+        name: integration-test-logs
+        path: nightfall_test.log
