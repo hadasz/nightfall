@@ -200,7 +200,9 @@ a Whisper stub, which will emulate whisper for participants who are all on the s
 you want to run across multiple blockchain nodes and server instances then replace all occurrences
 of the words `whisper-controller-stub` with `whisper-controller` in the code — but you will need to
 use Geth rather than Ganache-cli and construct an appropriate Docker container to replace the
-Ganache one we provide
+Ganache one we provide.
+
+For more information, see [Using Other Networks](doc/Using Other Networks.md).
 
 ## Acknowledgements
 

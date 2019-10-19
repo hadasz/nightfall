@@ -17,8 +17,8 @@ case "${systemInfo}" in
   *)          machine="UNKNOWN:${systemInfo}"
 esac
 
-printf "${GREEN}*** Cleaning up all test containers ***${NC}\n"
-docker-compose -f docker-compose.test.yml down -v || true
+# printf "${GREEN}*** Cleaning up all test containers ***${NC}\n"
+# docker-compose -f docker-compose.test.yml down -v || true
 
 printf "${GREEN}*** Build image for all Containers ***${NC}\n"
 docker-compose -f docker-compose.test.yml build
@@ -37,6 +37,7 @@ popd
 printf "${GREEN}*** Launching containerized ganache-test ***${NC}\n"
 docker-compose -f docker-compose.test.yml up -d ganache_test
 
+# This can be commented out not to redeploy
 printf "${GREEN}*** Deploying all contracts ***${NC}\n"
 make offchain-test-migrate
 
