@@ -16,6 +16,7 @@ import zokrates from './zokrates';
 import cv from './compute-vectors';
 import Element from './Element';
 import Web3 from './web3';
+import { getContract } from './contractUtils';
 
 const NFTokenShield = contract(jsonfile.readFileSync('./build/contracts/NFTokenShield.json'));
 
@@ -307,19 +308,23 @@ async function mint(tokenId, ownerPublicKey, salt, vkId, blockchainOptions) {
   const registry = await verifier.getRegistry();
   console.log('Check that a registry has actually been registered:', registry);
 
-  // make token shield contract an approver to transfer this token on behalf of the owner (to comply with the standard as msg.sender has to be owner or approver)
-  await addApproverNFToken(nfTokenShieldInstance.address, tokenId, account);
+  // Add nfTokenShield as an approver for the token transfer
+  const { contractInstance: nfToken } = await getContract('NFTokenMetadata');
+  const test = await nfToken.approve(nfTokenShieldAddress, tokenId, {
+    from: account,
+    gas: 4000000,
+  });
 
-  // with the pre-compute done we can mint the token, which is now a reasonably light-weight calculation
-  const commitmentIndex = await zkp.mint(
-    proof,
-    inputs,
-    vkId,
-    tokenId,
-    commitment,
-    account,
-    nfTokenShieldInstance,
-  );
+  console.log('test', test);
+
+  // Mint the commitment
+  const accountWith0x = utils.ensure0x(account);
+  const txReceipt = await nfTokenShieldInstance.mint(proof, inputs, vkId, tokenId, commitment, {
+    from: accountWith0x,
+    gas: 6500000,
+    gasPrice: config.GASPRICE,
+  });
+  const commitmentIndex = txReceipt.logs[0].args.commitment_index;
 
   console.log('Mint output: [z_A, z_A_index]:', commitment, commitmentIndex.toString());
   console.log('MINT COMPLETE\n');
@@ -357,7 +362,8 @@ async function transfer(
   vkId,
   blockchainOptions,
 ) {
-  const { account, nfTokenShieldJson, nfTokenShieldAddress } = blockchainOptions;
+  const { nfTokenShieldJson, nfTokenShieldAddress } = blockchainOptions;
+  const account = utils.ensure0x(blockchainOptions.account);
 
   const nfTokenShield = contract(nfTokenShieldJson);
   nfTokenShield.setProvider(Web3.connect());
@@ -472,17 +478,21 @@ async function transfer(
   proof = proof.map(el => utils.hexToDec(el));
   console.groupEnd();
 
-  // send the token to Bob by transforming the commitment
-  const [outputCommitmentIndex, txObj] = await zkp.transfer(
+  const transferReceipt = await nfTokenShieldInstance.transfer(
     proof,
     inputs,
     vkId,
     root,
     n,
     outputCommitment,
-    account,
-    nfTokenShieldInstance,
+    {
+      from: account,
+      gas: 6500000,
+      gasPrice: config.GASPRICE,
+    },
   );
+
+  const outputCommitmentIndex = transferReceipt.logs[0].args.commitment_index;
 
   console.log('TRANSFER COMPLETE\n');
   console.groupEnd();
@@ -490,7 +500,7 @@ async function transfer(
   return {
     outputCommitment,
     outputCommitmentIndex,
-    txObj,
+    transferReceipt,
   };
 }
 
@@ -623,13 +633,17 @@ async function burn(
   proof = proof.map(el => utils.hexToDec(el));
   console.groupEnd();
 
-  // with the pre-compute done we can burn the token, which is now a reasonably
-  // light-weight calculation
-  await zkp.burn(proof, inputs, vkId, root, Na, tokenId, payTo, account, nfTokenShieldInstance);
+  // Burns commitment and returns token to payTo
+  const accountWith0x = utils.ensure0x(account);
+  await nfTokenShieldInstance.burn(proof, inputs, vkId, root, Na, tokenId, payTo, {
+    from: accountWith0x,
+    gas: 6500000,
+    gasPrice: config.GASPRICE,
+  });
 
   console.log('BURN COMPLETE\n');
   console.groupEnd();
-  return { commitment };
+  return commitment;
 }
 
 async function checkCorrectness(A, pk, S, z, zIndex, account) {

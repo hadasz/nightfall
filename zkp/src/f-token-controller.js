@@ -15,6 +15,7 @@ import zokrates from './zokrates';
 import cv from './compute-vectors';
 import Element from './Element';
 import Web3 from './web3';
+import { getContract } from './contractUtils';
 
 const utils = require('zkp-utils');
 
@@ -204,7 +205,8 @@ async function computeProof(elements, hostDir) {
  * @returns {Number} commitmentIndex
  */
 async function mint(amount, ownerPublicKey, salt, vkId, blockchainOptions) {
-  const { account, fTokenShieldJson, fTokenShieldAddress } = blockchainOptions;
+  const { fTokenShieldJson, fTokenShieldAddress } = blockchainOptions;
+  const account = utils.ensure0x(blockchainOptions.account);
 
   const fTokenShield = contract(fTokenShieldJson);
   fTokenShield.setProvider(Web3.connect());
@@ -268,29 +270,22 @@ async function mint(amount, ownerPublicKey, salt, vkId, blockchainOptions) {
   proof = proof.map(el => utils.hexToDec(el));
   console.groupEnd();
 
-  // next, we have to approve withdrawal of sufficient ERC-20 from the minter's
-  // account to pay for the minted coin
-  console.log('Approving ERC-20 spend from: ', fTokenShieldInstance.address);
-  const fToken = await FToken.at(await fTokenShieldInstance.getFToken.call());
+  // Approve fTokenShield to take tokens from minter's account.
+  const { contractInstance: fToken } = await getContract('FToken');
   await fToken.approve(fTokenShieldInstance.address, parseInt(amount, 16), {
     from: account,
     gas: 4000000,
     gasPrice: config.GASPRICE,
   });
-  console.log('ERC-20 spend approved!', parseInt(amount, 16));
-  console.log('Balance of account', account, (await getBalance(account)).toNumber());
 
-  // with the pre-compute done, and the funds approved, we can mint the token,
-  // which is now a reasonably light-weight calculation
-  const commitmentIndex = await zkp.mint(
-    proof,
-    inputs,
-    vkId,
-    amount,
-    commitment,
-    account,
-    fTokenShieldInstance,
-  );
+  // Mint the commitment
+  const txReceipt = await fTokenShieldInstance.mint(proof, inputs, vkId, amount, commitment, {
+    from: account,
+    gas: 6500000,
+    gasPrice: config.GASPRICE,
+  });
+
+  const commitmentIndex = txReceipt.logs[0].args.commitment_index;
 
   console.log('Mint output: [zA, zAIndex]:', commitment, commitmentIndex.toString());
   console.log('MINT COMPLETE\n');
@@ -320,7 +315,8 @@ async function transfer(
   vkId,
   blockchainOptions,
 ) {
-  const { account, fTokenShieldJson, fTokenShieldAddress } = blockchainOptions;
+  const { fTokenShieldJson, fTokenShieldAddress } = blockchainOptions;
+  const account = utils.ensure0x(blockchainOptions.account);
 
   const fTokenShield = contract(fTokenShieldJson);
   fTokenShield.setProvider(Web3.connect());
@@ -495,8 +491,8 @@ async function transfer(
   proof = proof.map(el => utils.hexToDec(el));
   console.groupEnd();
 
-  // send the token to Bob by transforming the commitment
-  const [zEIndex, zFIndex, txObj] = await zkp.transfer(
+  // Transfers commitment
+  const transferReceipt = await fTokenShieldInstance.transfer(
     proof,
     inputs,
     vkId,
@@ -505,9 +501,15 @@ async function transfer(
     nD,
     zE,
     zF,
-    account,
-    fTokenShieldInstance,
+    {
+      from: account,
+      gas: 6500000,
+      gasPrice: config.GASPRICE,
+    },
   );
+
+  const zEIndex = transferReceipt.logs[0].args.commitment1_index;
+  const zFIndex = transferReceipt.logs[0].args.commitment2_index;
 
   console.log('TRANSFER COMPLETE\n');
   console.groupEnd();
@@ -524,7 +526,7 @@ async function transfer(
         salt: outputCommitments[1].salt,
       },
     ],
-    txObj,
+    transferReceipt,
   };
 }
 
@@ -551,12 +553,9 @@ async function burn(
   vkId,
   blockchainOptions,
 ) {
-  const {
-    account,
-    fTokenShieldJson,
-    fTokenShieldAddress,
-    tokenReceiver: _payTo,
-  } = blockchainOptions;
+  const { fTokenShieldJson, fTokenShieldAddress, tokenReceiver: _payTo } = blockchainOptions;
+
+  const account = utils.ensure0x(blockchainOptions.account);
 
   const fTokenShield = contract(fTokenShieldJson);
   fTokenShield.setProvider(Web3.connect());
@@ -649,9 +648,12 @@ async function burn(
   proof = proof.map(el => utils.hexToDec(el));
   console.groupEnd();
 
-  // with the pre-compute done we can burn the token, which is now a reasonably
-  // light-weight calculation
-  await zkp.burn(proof, inputs, vkId, root, Nc, amount, payTo, account, fTokenShieldInstance);
+  // Burn the commitment and return tokens to the payTo account.
+  await fTokenShieldInstance.burn(proof, inputs, vkId, root, Nc, amount, payTo, {
+    from: account,
+    gas: 6500000,
+    gasPrice: config.GASPRICE,
+  });
 
   console.log('BURN COMPLETE\n');
   console.groupEnd();
