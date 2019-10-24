@@ -21,15 +21,6 @@ const NFTokenShield = contract(jsonfile.readFileSync('./build/contracts/NFTokenS
 
 NFTokenShield.setProvider(Web3.connect());
 
-const Verifier_Registry = contract(
-  jsonfile.readFileSync('./build/contracts/Verifier_Registry.json'),
-);
-
-Verifier_Registry.setProvider(Web3.connect());
-
-const Verifier = contract(jsonfile.readFileSync('./build/contracts/GM17_v0.json'));
-Verifier.setProvider(Web3.connect());
-
 const NFTokenMetadata = contract(jsonfile.readFileSync('./build/contracts/NFTokenMetadata.json'));
 NFTokenMetadata.setProvider(Web3.connect());
 
@@ -233,13 +224,6 @@ async function mint(A, pk_A, S_A, vkId, blockchainOptions) {
 
   console.group('\nIN MINT...');
 
-  console.info('Finding the relevant Shield and Verifier contracts...');
-  const verifier = await Verifier.deployed();
-  const verifier_registry = await Verifier_Registry.deployed();
-  console.log('NFTokenShield contract address:', nfTokenShieldInstance.address);
-  console.log('Verifier contract address:', verifier.address);
-  console.log('Verifier_Registry contract address:', verifier_registry.address);
-
   // Calculate new arguments for the proof:
   const z_A = utils.concatenateThenHash(utils.strip0x(A).slice(-32 * 2), pk_A, S_A);
 
@@ -290,10 +274,6 @@ async function mint(A, pk_A, S_A, vkId, blockchainOptions) {
   proof = proof.map(el => utils.hexToDec(el));
   console.groupEnd();
 
-  // CHECK!!!!
-  const registry = await verifier.getRegistry();
-  console.log('Check that a registry has actually been registered:', registry);
-
   // make token shield contract an approver to transfer this token on behalf of the owner (to comply with the standard as msg.sender has to be owner or approver)
   await addApproverNFToken(nfTokenShieldInstance.address, A, account);
 
@@ -327,13 +307,6 @@ async function transfer(A, pk_B, S_A, S_B, sk_A, z_A, z_A_index, vkId, blockchai
   const nfTokenShield = contract(nfTokenShieldJson);
   nfTokenShield.setProvider(Web3.connect());
   const nfTokenShieldInstance = await nfTokenShield.at(nfTokenShieldAddress);
-
-  console.log('Finding the relevant Shield and Verifier contracts');
-  const verifier = await Verifier.at(await nfTokenShieldInstance.getVerifier.call());
-  const verifier_registry = await Verifier_Registry.at(await verifier.getRegistry.call());
-  console.log('NFTokenShield contract address:', nfTokenShieldInstance.address);
-  console.log('Verifier contract address:', verifier.address);
-  console.log('Verifier_Registry contract address:', verifier_registry.address);
 
   // Get token data from the Shield contract:
   const root = await nfTokenShieldInstance.latestRoot(); // solidity getter for the public variable latestRoot
@@ -467,13 +440,6 @@ async function burn(A, Sk_A, S_A, z_A, z_A_index, vkId, blockchainOptions) {
   console.log('z_A_index', z_A_index);
   console.log('account', account);
   console.log('payTo', payToOrDefault);
-
-  console.log('Finding the relevant Shield and Verifier contracts');
-  const verifier = await Verifier.deployed();
-  const verifier_registry = await Verifier_Registry.deployed();
-  console.log('NFTokenShield contract address:', nfTokenShieldInstance.address);
-  console.log('Verifier contract address:', verifier.address);
-  console.log('Verifier_Registry contract address:', verifier_registry.address);
 
   const root = await nfTokenShieldInstance.latestRoot(); // solidity getter for the public variable latestRoot
   console.log(`Merkle Root: ${root}`);

@@ -21,14 +21,6 @@ const utils = require('zkp-utils');
 const FTokenShield = contract(jsonfile.readFileSync('./build/contracts/FTokenShield.json'));
 FTokenShield.setProvider(Web3.connect());
 
-const VerifierRegistry = contract(
-  jsonfile.readFileSync('./build/contracts/Verifier_Registry.json'),
-);
-VerifierRegistry.setProvider(Web3.connect());
-
-const Verifier = contract(jsonfile.readFileSync('./build/contracts/GM17_v0.json'));
-Verifier.setProvider(Web3.connect());
-
 const FToken = contract(jsonfile.readFileSync('./build/contracts/FToken.json'));
 FToken.setProvider(Web3.connect());
 
@@ -212,13 +204,6 @@ async function mint(A, pkA, S_A, vkId, blockchainOptions) {
 
   console.group('\nIN MINT...');
 
-  console.log('Finding the relevant Shield and Verifier contracts');
-  const verifier = await Verifier.deployed();
-  const verifierRegistry = await VerifierRegistry.deployed();
-  console.log('FTokenShield contract address:', fTokenShieldInstance.address);
-  console.log('Verifier contract address:', verifier.address);
-  console.log('VerifierRegistry contract address:', verifierRegistry.address);
-
   // Calculate new arguments for the proof:
   const zA = utils.concatenateThenHash(A, pkA, S_A);
 
@@ -331,13 +316,6 @@ async function transfer(
   const c = parseInt(C, 16) + parseInt(D, 16);
   const e = parseInt(E, 16) + parseInt(F, 16);
   if (c > 0xffffffff || e > 0xffffffff) throw new Error('Coin values are too large');
-
-  console.log('Finding the relevant Shield and Verifier contracts');
-  const verifier = await Verifier.deployed();
-  const verifierRegistry = await VerifierRegistry.deployed();
-  console.log('FTokenShield contract address:', fTokenShieldInstance.address);
-  console.log('Verifier contract address:', verifier.address);
-  console.log('VerifierRegistry contract address:', verifierRegistry.address);
 
   const root = await fTokenShieldInstance.latestRoot();
   console.log(`Merkle Root: ${root}`);
@@ -502,15 +480,7 @@ async function burn(C, skA, S_C, zC, zCIndex, vkId, blockchainOptions) {
 
   let payTo = _payTo;
   if (payTo === undefined) payTo = account; // have the option to pay out to another address
-  // before we can burn, we need to deploy a verifying key to mintVerifier (reusing mint for this)
   console.group('\nIN BURN...');
-
-  console.log('Finding the relevant Shield and Verifier contracts');
-  const verifier = await Verifier.deployed();
-  const verifierRegistry = await VerifierRegistry.deployed();
-  console.log('FTokenShield contract address:', fTokenShieldInstance.address);
-  console.log('Verifier contract address:', verifier.address);
-  console.log('VerifierRegistry contract address:', verifierRegistry.address);
 
   const root = await fTokenShieldInstance.latestRoot(); // solidity getter for the public variable latestRoot
   console.log(`Merkle Root: ${root}`);
