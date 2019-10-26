@@ -4,7 +4,7 @@ import utils from 'zkp-utils';
 import Web3 from '../src/web3';
 
 import controller from '../src/f-token-controller';
-
+import { getVkId, getContract } from './config';
 jest.setTimeout(7200000);
 
 Web3.connect();
@@ -84,9 +84,18 @@ describe('f-token-controller.js tests', () => {
   });
 
   test('Should mint an ERC-20 commitment Z_A_C for Alice for asset C', async () => {
+    const { contractJson: fTokenShieldJson, contractInstance: fTokenShield } = await getContract(
+      'FTokenShield',
+    );
+    const vkId = getVkId('MintCoin');
     const accounts = await web3.eth.getAccounts();
+    const S_A_C = await utils.rndHex(32);
     console.log('Alices account ', (await controller.getBalance(accounts[0])).toNumber());
-    const [zTest, zIndex] = await controller.mint(C, pkA, S_A_C, accounts[0]);
+    const [zTest, zIndex] = await controller.mint(C, pkA, S_A_C, vkId, {
+      account: accounts[0],
+      fTokenShieldJson,
+      fTokenShieldAddress: fTokenShield.address,
+    });
 
     expect(Z_A_C).toEqual(zTest);
     expect(0).toEqual(parseInt(zIndex, 10));
@@ -94,9 +103,8 @@ describe('f-token-controller.js tests', () => {
   });
 
   test('Should mint another ERC-20 commitment Z_A_D for Alice for asset D', async () => {
-    const accounts = await web3.eth.getAccounts();
+    const S_A_D = await utils.rndHex(32);
     const [zTest, zIndex] = await controller.mint(D, pkA, S_A_D, accounts[0]);
-
     expect(Z_A_D).toEqual(zTest);
     expect(1).toEqual(parseInt(zIndex, 10));
     console.log(`Alice's account `, (await controller.getBalance(accounts[0])).toNumber());
@@ -104,6 +112,9 @@ describe('f-token-controller.js tests', () => {
 
   test('Should transfer a ERC-20 commitment to Bob (two coins get nullified, two created; one coin goes to Bob, the other goes back to Alice as change)', async () => {
     // E becomes Bob's, F is change returned to Alice
+
+    const S_A_C = await utils.rndHex(32);
+    const S_A_D = await utils.rndHex(32);
     const accounts = await web3.eth.getAccounts();
     await controller.transfer(
       C,

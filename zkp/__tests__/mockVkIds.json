@@ -1,0 +1,26 @@
+{
+  "MintToken": {
+    "vkId": "0xd06f28c82eedb6017c1d3f7063dace2149c22da1b044364fa830903346647936",
+    "Address": "0x8fBbC58A322f603882b967769A8B46d3435050c3"
+  },
+  "TransferToken": {
+    "vkId": "0x3b5e076e564777148011c2a7fd911578737e2baff00543d8fc868e7af00cacbb",
+    "Address": "0x8fBbC58A322f603882b967769A8B46d3435050c3"
+  },
+  "BurnToken": {
+    "vkId": "0xe86e32fac55dcdd08d498be755f81d5746021c0dd8dac1f91e1d24715edee143",
+    "Address": "0x8fBbC58A322f603882b967769A8B46d3435050c3"
+  },
+  "MintCoin": {
+    "vkId": "0xfa518772721e3f9afae8b4cc856f802501726e454fa25c553d73e2b4da7c8952",
+    "Address": "0x8fBbC58A322f603882b967769A8B46d3435050c3"
+  },
+  "TransferCoin": {
+    "vkId": "0x83999065bcc8628795e30b77d693255ca7d582822059dd9cb2d9703d3459799e",
+    "Address": "0x8fBbC58A322f603882b967769A8B46d3435050c3"
+  },
+  "BurnCoin": {
+    "vkId": "0x9be7078f30edd2321f934d9dddf9db3f4a6af02f31dd9e042891e54d896fa24a",
+    "Address": "0x8fBbC58A322f603882b967769A8B46d3435050c3"
+  }
+}
