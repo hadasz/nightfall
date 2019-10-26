@@ -5,6 +5,7 @@ import Web3 from '../src/web3';
 
 import controller from '../src/f-token-controller';
 import { getVkId, getContract } from './config';
+import vkController from '../src/vk-controller';
 jest.setTimeout(7200000);
 
 Web3.connect();
@@ -43,6 +44,9 @@ describe('f-token-controller.js tests', () => {
   // Alice sends Bob E and gets F back (Bob has 40 ETH, Alice has 10 ETH)
   // Bob then has E+G at total of 70 ETH
   // Bob sends H to Alice and keeps I (Bob has 50 ETH and Alice has 10+20=30 ETH)
+  beforeAll(async () => {
+    await vkController.runController();
+  });
 
   test('Should create 10000 tokens in accounts[0] and accounts[1]', async () => {
     // fund some accounts with FToken
@@ -87,9 +91,11 @@ describe('f-token-controller.js tests', () => {
     const { contractJson: fTokenShieldJson, contractInstance: fTokenShield } = await getContract(
       'FTokenShield',
     );
-    const vkId = getVkId('MintCoin');
+    const vkId = await getVkId('MintCoin');
+
     const accounts = await web3.eth.getAccounts();
-    const S_A_C = await utils.rndHex(32);
+    const S_A_C = '0x0f0cf75759502c8912db1ccd84212deece7d3ff757b1fb623d71c3a51cc07c91';
+    const test_z_a_c = '0x929c81ed2ccf1b501051132b0acf18ffce2ddcbdc696b370a98601c90ea766c5';
     console.log('Alices account ', (await controller.getBalance(accounts[0])).toNumber());
     const [zTest, zIndex] = await controller.mint(C, pkA, S_A_C, vkId, {
       account: accounts[0],
@@ -97,8 +103,8 @@ describe('f-token-controller.js tests', () => {
       fTokenShieldAddress: fTokenShield.address,
     });
 
-    expect(Z_A_C).toEqual(zTest);
-    expect(0).toEqual(parseInt(zIndex, 10));
+    expect(test_z_a_c).toEqual(zTest);
+    expect(2).toEqual(parseInt(zIndex, 10));
     console.log(`Alice's account `, (await controller.getBalance(accounts[0])).toNumber());
   });
 

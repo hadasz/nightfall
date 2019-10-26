@@ -5,7 +5,7 @@ import Web3 from '../src/web3';
 
 
 
-const VK_IDS= "./__tests__/mockVkIds.json";
+const VK_IDS=  './src/vkIds.json' ;
 const web3 = Web3.connect();
 
 const contractMapping = {
