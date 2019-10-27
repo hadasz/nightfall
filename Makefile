@@ -14,4 +14,11 @@ zkp-start:
 	docker-compose run --rm zkp npm start
 
 zkp-test:
+	@$(MAKE) truffle-migrate
+	cd zkp/__tests__ && sh test_setup.sh
 	docker-compose run --rm zkp npm t
+
+zkp-test-ftcontroller:
+	@$(MAKE) truffle-migrate
+	cd zkp/__tests__ && sh test_setup.sh
+	docker-compose run --rm zkp npm run test-ftcontroller

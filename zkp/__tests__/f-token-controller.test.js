@@ -4,7 +4,7 @@ import utils from 'zkp-utils';
 import Web3 from '../src/web3';
 
 import controller from '../src/f-token-controller';
-import { getVkId, getContract } from './config';
+import { getVkId, getContract } from '../src/contractUtils';
 import vkController from '../src/vk-controller';
 jest.setTimeout(7200000);
 

@@ -9,6 +9,7 @@
     "setup-all": "yes | NODE_ENV=setup npx babel-node code/index.js",
     "start": "nodemon --ignore src/vkIds.json --ignore stats-config/ --ignore code/ --exec babel-node ./src/index.js",
     "test": "jest ./__tests__/*.test.js",
+    "test-ftcontroller": "jest ./__tests__/f-token-controller.test.js",
     "generate-keys": "./install.sh"
   },
   "contributors": [
