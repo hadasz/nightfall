@@ -6,6 +6,7 @@ import Web3 from '../src/web3';
 import controller from '../src/f-token-controller';
 import { getVkId, getContract } from '../src/contractUtils';
 import vkController from '../src/vk-controller';
+
 jest.setTimeout(7200000);
 
 Web3.connect();
@@ -17,12 +18,12 @@ describe('f-token-controller.js tests', () => {
   const D = '0x00000000000000000000000000000030';
   const E = '0x00000000000000000000000000000040';
   const F = '0x00000000000000000000000000000010'; // don't forget to make C+D=E+F
-  const skA =   '0x1111111111111111111111111111111111111111111111111111111111111111';
-  const skB =   '0x2222222222222222222222222222222222222222222222222222222222222222';
+  const skA = '0x1111111111111111111111111111111111111111111111111111111111111111';
+  const skB = '0x2222222222222222222222222222222222222222222222222222222222222222';
   const S_A_C = '0x0f0cf75759502c8912db1ccd84212deece7d3ff757b1fb623d71c3a51cc07c91';
   const S_A_D = '0x3333333333333333333333333333333333333333333333333333333333333333';
-  const sAToBE ='0x4444444444444444444444444444444444444444444444444444444444444444';
-  const sAToAF ='0x5555555555555555555555555555555555555555555555555555555555555555';
+  const sAToBE = '0x4444444444444444444444444444444444444444444444444444444444444444';
+  const sAToAF = '0x5555555555555555555555555555555555555555555555555555555555555555';
   const pkA = utils.hash(skA);
   const pkB = utils.hash(skB);
   const Z_A_C = utils.concatenateThenHash(C, pkA, S_A_C);
@@ -32,11 +33,11 @@ describe('f-token-controller.js tests', () => {
   const H = '0x00000000000000000000000000000020';
   const I = '0x00000000000000000000000000000050';
   const S_B_G = '0x7777777777777777777777777777777777777777777777777777777777777777';
-  const sBToEH ='0x8888888888888888888888888888888888888888888888888888888888888888';
-  const sBToBI ='0x9999999999999999999999999999999999999999999999999999999999999999';
+  const sBToEH = '0x8888888888888888888888888888888888888888888888888888888888888888';
+  const sBToBI = '0x9999999999999999999999999999999999999999999999999999999999999999';
   const Z_B_G = utils.concatenateThenHash(G, pkB, S_B_G);
   const Z_B_E = utils.concatenateThenHash(E, pkB, sAToBE);
-  const pkE =   '0x1111111111111111111111111111111111111111111111111111121111111111';
+  const pkE = '0x1111111111111111111111111111111111111111111111111111121111111111';
   // And a burn
   const Z_A_F = utils.concatenateThenHash(F, pkA, sAToAF);
 
@@ -132,17 +133,23 @@ describe('f-token-controller.js tests', () => {
     const blockchainOptions = {
       account: accounts[0],
       fTokenShieldJson,
-      fTokenShieldAddress: fTokenShield.address
+      fTokenShieldAddress: fTokenShield.address,
     };
     const inputCommitments = [
       { value: C, salt: S_A_C, commitment: Z_A_C, index: 0 },
       { value: D, salt: S_A_D, commitment: Z_A_D, index: 1 },
     ];
 
-    const outputCommitments = [{ value: E, salt: sAToBE}, { value: F, salt: sAToAF }];
-    await controller.transfer(inputCommitments, outputCommitments, pkB, skA, vkId, blockchainOptions);
+    const outputCommitments = [{ value: E, salt: sAToBE }, { value: F, salt: sAToAF }];
+    await controller.transfer(
+      inputCommitments,
+      outputCommitments,
+      pkB,
+      skA,
+      vkId,
+      blockchainOptions,
+    );
     // now Bob should have 40 (E) ETH
-
   });
 
   test('Should mint another ERC-20 commitment Z_B_G for Bob for asset G', async () => {
@@ -154,7 +161,7 @@ describe('f-token-controller.js tests', () => {
     const blockchainOptions = {
       account: accounts[1],
       fTokenShieldJson,
-      fTokenShieldAddress: fTokenShield.address
+      fTokenShieldAddress: fTokenShield.address,
     };
     const [zTest, zIndex] = await controller.mint(G, pkB, S_B_G, vkId, blockchainOptions);
 
@@ -174,16 +181,23 @@ describe('f-token-controller.js tests', () => {
     const blockchainOptions = {
       account: accounts[1],
       fTokenShieldJson,
-      fTokenShieldAddress: fTokenShield.address
+      fTokenShieldAddress: fTokenShield.address,
     };
     const inputCommitments = [
-      { value: E, salt: sAToBE , commitment: Z_B_E, index: 2 },
-      { value: G, salt: S_B_G , commitment: Z_B_G, index: 4 },
+      { value: E, salt: sAToBE, commitment: Z_B_E, index: 2 },
+      { value: G, salt: S_B_G, commitment: Z_B_G, index: 4 },
     ];
 
     const outputCommitments = [{ value: H, salt: sBToEH }, { value: I, salt: sBToBI }];
 
-    await controller.transfer(inputCommitments, outputCommitments, pkE, skB, vkId, blockchainOptions);
+    await controller.transfer(
+      inputCommitments,
+      outputCommitments,
+      pkE,
+      skB,
+      vkId,
+      blockchainOptions,
+    );
   });
 
   test(`Should burn Alice's remaining ERC-20 commitment`, async () => {
@@ -197,7 +211,7 @@ describe('f-token-controller.js tests', () => {
       account: accounts[0],
       fTokenShieldJson,
       fTokenShieldAddress: fTokenShield.address,
-      tokenReceiver: accounts[3]
+      tokenReceiver: accounts[3],
     };
     const bal1 = await controller.getBalance(accounts[3]);
     const bal = await controller.getBalance(accounts[0]);
